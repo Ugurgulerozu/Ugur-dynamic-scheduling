@@ -5,7 +5,7 @@ import numpy as np
 
 #d(i,j,t)leri d(i,t) olarak değiştirdim
 
-def yeni_model2(teams,days,results_df ,first_round_solution, M=1000):
+def yeni_model2(teams,days,results_df ,M=1000):
 
 
     # Create ConcreteModel
@@ -26,11 +26,6 @@ def yeni_model2(teams,days,results_df ,first_round_solution, M=1000):
         for j in teams:
             model.p[i, j] = results_df.iloc[i-1, j-1]
 
-    for _, row in first_round_solution.iterrows():
-            day = row['Day']
-            team1 = row['Team 1']
-            team2 = row['Team 2']
-            model.x[team1, team2, day].fix(1)
 
     for t in days:
         for i in teams:
@@ -174,9 +169,47 @@ def yeni_model2(teams,days,results_df ,first_round_solution, M=1000):
                 if value(model.x[i,j,t] == 1):
                     print(f"{j} vs {i} slot {t} d2'nin değeri= ")
                     print({value(model.d2[j,t])})
+    l2=[]
+    for t in days:
+        for i in teams:
+            for j in teams:
+                if value(model.x[i,j,t] == 1):
+                    print(f"{i} vs {j} slot {t} d'nin değeri= ")
+                    print(abs(value(model.d1[i,t]-model.d2[j,t])))
+                    l2.append(abs(value(model.d1[i,t]-model.d2[j,t])))
+    l=[]
+    for t in days:
+        for i in teams:
+            for j in teams:
+                if value(model.x[i,j,t] == 1):
+                    print(f"{i} vs {j} slot {t} d'nin değeri= ")
+                    print(abs(value(model.y[i,j,t]-model.z[i,j,t])))
+                    l.append(abs(value(model.y[i,j,t]-model.z[i,j,t])))
+
+    d1_df = pd.DataFrame(columns=['Day', 'Team 1', 'Value'])
+    for t in days:
+        for i in teams:
+            for j in teams:
+                if value(model.x[i,j,t] == 1):
+                    new_row1 = pd.DataFrame({'Day': [t], 'Team 1': [i], 'Value': [value(model.y[i,j,t])]})
+                    d1_df = pd.concat([d1_df, new_row1]).reset_index(drop=True)
+                    print(f"{i} vs {j} slot {t} d1'nin değeri= ")
+                    print({value(model.y[i,j,t])})
+
+    d2_df = pd.DataFrame(columns=['Day', 'Team 2', 'Value'])
+
+    for t in days:
+        for i in teams:
+            for j in teams:
+                if value(model.x[i,j,t] == 1):
+                    new_row2 = pd.DataFrame({'Day': [t], 'Team 2': [j],'Value': [value(model.z[i,j,t])]})
+                    d2_df = pd.concat([d2_df, new_row2]).reset_index(drop=True)
+                    print(f"{j} vs {i} slot {t} d2'nin değeri= ")
+                    print({value(model.z[i,j,t])})
 
 
-    return solution_df, obj_value
+
+    return solution_df, d1_df, d2_df, obj_value, l, l2
 """
 for t in days:
         for i in teams:

@@ -3,9 +3,9 @@ import pandas as pd
 import math
 import numpy as np
 
-#d(i,j,t)leri d(i,t) olarak değiştirdim
+#Tankut hocanın yazdığı modeli kodladım
 
-def yeni_model(teams,days,results_df, M=1000):
+def yeni_model(teams,days,results_df,M=1000):
 
 
     # Create ConcreteModel
@@ -23,10 +23,11 @@ def yeni_model(teams,days,results_df, M=1000):
     model.constraints = ConstraintList()
 
 
-
     for i in teams:
         for j in teams:
             model.p[i, j] = results_df.iloc[i-1, j-1]
+
+
 
     for i in teams:
         for j in teams:
@@ -34,18 +35,15 @@ def yeni_model(teams,days,results_df, M=1000):
                 if i>=j:
                     model.constraints.add(model.x[i,j,t] == 0) 
 
-    for t in days:
-        for i in teams:
-            model.constraints.add(model.x[i,i,t] == 0)
-
     for i in teams:
         for j in teams:
             if i<j:
-                model.constraints.add(sum((model.x[i,j,t] + model.x[j,i,t]) for t in days) == 1)
+                model.constraints.add(sum(model.x[i,j,t] for t in days) == 1)
 
     for i in teams:
         for t in days:
-            model.constraints.add(sum((model.x[i,j,t] + model.x[j,i,t]) for j in teams if j!=i ) == 1)
+            model.constraints.add(sum(model.x[i,j,t] + model.x[j,i,t] for j in teams if i!=j) == 1)
+
 
 
     for i in teams:
@@ -70,30 +68,38 @@ def yeni_model(teams,days,results_df, M=1000):
     for i in teams:
         for j in teams:
             for t in days:
-                model.constraints.add(model.y[i, j, t] <= M * model.x[i, j, t])
+                if i<j:
+            
+                    model.constraints.add(model.y[i, j, t] <= M * model.x[i, j, t])
     for i in teams:
         for j in teams:
             for t in days:
-                model.constraints.add(model.y[i, j, t] <= model.d1[i, j, t])
+                if i<j:
+                    model.constraints.add(model.y[i, j, t] <= model.d1[i, j, t])
 
     for i in teams:
         for j in teams:
             for t in days:
-                model.constraints.add(model.z[i, j, t] <= M * model.x[i, j, t])
+                if i<j:
+                    model.constraints.add(model.z[i, j, t] <= M * model.x[i, j, t])
     for i in teams:
         for j in teams:
             for t in days:
-                model.constraints.add(model.z[i, j, t] <= model.d2[i, j, t])
+                if i<j:
+
+                    model.constraints.add(model.z[i, j, t] <= model.d2[i, j, t])
 
     for i in teams:
         for j in teams:
             for t in days:
-                model.constraints.add(expr= model.y[i, j, t] + M >= model.d1[i, j, t] + M * model.x[i, j, t])
+                if i<j:
+                    model.constraints.add(expr= model.y[i, j, t] + M >= model.d1[i, j, t] + M * model.x[i, j, t])
 
     for i in teams:
         for j in teams:
             for t in days:
-                model.constraints.add(expr= model.z[i, j, t] + M >= model.d2[i, j, t] + M * model.x[i, j, t])
+                if i<j:
+                    model.constraints.add(expr= model.z[i, j, t] + M >= model.d2[i, j, t] + M * model.x[i, j, t])
 
     
 
@@ -107,10 +113,12 @@ def yeni_model(teams,days,results_df, M=1000):
 
     
     # Solve the model
-    solver = SolverFactory('gurobi')
-    results= solver.solve(model)
+    solver = SolverFactory('gurobi', options={'MIPFocus':2, 'Heuristics':1}) 
+    results= solver.solve(model, tee=True)
     obj_value = value(model.obj())
     #model.write(f"my_model10.lp", io_options={'symbolic_solver_labels': True})
+    model.constraints.pprint()
+
 
 
 
@@ -152,7 +160,7 @@ def yeni_model(teams,days,results_df, M=1000):
             for j in teams:
                 if value(model.x[i,j,t] == 1):
                     print(f"{i} vs {j} slot {t} d'nin değeri= ")
-                    print(abs(value(model.d1[i,j,t]-model.d2[i,j,t])))
+                    #print(abs(value(model.d1[i,j,t]-model.d2[i,j,t])))
                     l.append(abs(value(model.d1[i,j,t]-model.d2[i,j,t])))
     l2=[]
     for t in days:
@@ -160,8 +168,17 @@ def yeni_model(teams,days,results_df, M=1000):
             for j in teams:
                 if value(model.x[i,j,t] == 1):
                     print(f"{i} vs {j} slot {t} d'nin değeri= ")
-                    print(abs(value(model.y[i,j,t]-model.z[i,j,t])))
+                    #print(abs(value(model.y[i,j,t]-model.z[i,j,t])))
                     l2.append(abs(value(model.y[i,j,t]-model.z[i,j,t])))
+    l3=[]
+    for t in days:
+        for i in teams:
+            for j in teams:
+                if value(model.x[i,j,t] == 1):
+                    print(f"{i} vs {j} slot {t} d'nin değeri= ")
+                    #print(abs(value(model.y[i,j,t]-model.z[i,j,t])))
+                    l3.append(abs(value(model.y[i,j,t]+model.z[i,j,t])))
+
 
 
     d1_df = pd.DataFrame(columns=['Day', 'Team 1', 'Value'])
@@ -185,7 +202,7 @@ def yeni_model(teams,days,results_df, M=1000):
                     print(f"{j} vs {i} slot {t} d2'nin değeri= ")
                     print({value(model.z[i,j,t])})
 
-    return solution_df, d1_df, d2_df, obj_value, l,l2
+    return solution_df, d1_df, d2_df, obj_value, l,l2,l3
 """"
     for _, row in real_solution.iterrows():
         day = row['Day']

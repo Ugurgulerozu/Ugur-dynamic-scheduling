@@ -11,8 +11,8 @@ def generate_results(teams):
             team1 = teams[i]
             team2 = teams[j]
 
-            #result = random.choice([team1, team2, 'tie'])
-            result =random.choice([team1, team2, 'tie'])
+            result = random.choice([team1, team2, 'tie'])
+            #result =random.choice([team1, team2])
 
             matches.append({'Team 1': team1, 'Team 2': team2, 'Result': result})
 

@@ -4,8 +4,10 @@ import math
 import numpy as np
 import pyomo.core.expr
 #Tankut hocanın yazdığı modeli kodladım
+def weight_function(day, total_days):
+    return 1 / (total_days - day + 1)
 
-def yeni_model(teams,days,results_df, M=100):
+def weighted_days_model(teams,days,results_df, M=100):
 
 
     # Create ConcreteModels
@@ -17,6 +19,8 @@ def yeni_model(teams,days,results_df, M=100):
     model.d2 = Var(teams, teams, days, within=NonNegativeIntegers)
     model.y = Var(teams, teams, days, within = NonNegativeReals)
     model.z = Var(teams, teams, days, within = NonNegativeReals)
+    model.day_weights = Param(days, within=NonNegativeReals, initialize={day: weight_function(day, len(days)) for day in days})
+
 
 
     # Constraints
@@ -99,20 +103,23 @@ def yeni_model(teams,days,results_df, M=100):
 
 
     def rule_of(model):
-        return sum(sum(sum((model.y[i, j, t] + model.z[i, j, t]) for t in days) for j in teams if i<j) for i in teams)
+
+        return sum(sum(sum((model.y[i, j, t] + model.z[i, j, t]) * model.day_weights[t] for t in days) for j in teams if i < j) for i in teams)
 
 
     model.obj = Objective(rule=rule_of, sense=minimize)
 
-    
+    for t in days:
+        print(model.day_weights[t])
     
     # Solve the model
-    solver = SolverFactory('gurobi',options={'TimeLimit':14400, 'PoolGap': 0.1, 'PoolSolutions': 10}) 
-    results= solver.solve(model, tee=True)
+    solver = SolverFactory('gurobi') 
+    results = solver.solve(model, tee=True)
+    #results= solver.solve(model, tee=True) , options={'data': {'day_weights': day_weights_data}}
     #options={'MIPFocus':2, 'Heuristics':1,'PoolGap': 0.1, 'PoolSolutions': 10,} 
     #mipfocus ile heuristics birlikte çalışınca model çok yavaşlıyor. ayrı ayrı olunca ne oluyo bilmiyorum
-
     obj_value = value(model.obj())
+
     #model.write(f" 8takim.lp", io_options={'symbolic_solver_labels': True})
     #model.pprint()
     

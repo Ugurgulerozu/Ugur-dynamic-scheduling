@@ -45,7 +45,7 @@ def point_rating(ratings, teams, solution_df, result_df, r):
 
     for i in range(n):
         for j in range(n):
-            U_ij[i, j] = ((ratings_array[i] - ratings_array[j])**2)
+            U_ij[i, j] = (abs(ratings_array[i] - ratings_array[j]))
     
 
 

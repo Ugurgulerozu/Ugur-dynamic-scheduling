@@ -107,7 +107,7 @@ def yeni_model(teams,days,results_df, M=100):
     
     
     # Solve the model
-    solver = SolverFactory('gurobi',options={'TimeLimit':14400, 'PoolGap': 0.1, 'PoolSolutions': 10}) 
+    solver = SolverFactory('gurobi',options={'TimeLimit':2400}) 
     results= solver.solve(model, tee=True)
     #options={'MIPFocus':2, 'Heuristics':1,'PoolGap': 0.1, 'PoolSolutions': 10,} 
     #mipfocus ile heuristics birlikte çalışınca model çok yavaşlıyor. ayrı ayrı olunca ne oluyo bilmiyorum
@@ -161,7 +161,8 @@ def yeni_model(teams,days,results_df, M=100):
                             #print(f"{i} vs {j} slot {t} d'nin değeri= ")
                             #print(abs(value(model.y[i,j,t]-model.z[i,j,t])))
                             new_row1 = pd.DataFrame({'Day': [t], 'Team 1': [i], 'Team 2': [j], 'y+z': [value(model.y[i,j,t] + model.z[i,j,t])], 'd1+d2': [value(model.d1[i,j,t] + model.d2[i,j,t])]})
-                            l2 = pd.concat([l2, new_row1]).reset_index(drop=True)
+                            l2 = pd.concat([l2, new_row1.dropna()]).reset_index(drop=True)
+
 
     
 

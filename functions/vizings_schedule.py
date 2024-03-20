@@ -39,11 +39,11 @@ a function call when one does not want to change the original array.
 #randomly shuffle all weeks
 def rndAllRounds(edgeSchedule, nColors):
     swap = rnd.sample(range(1, nColors + 1), nColors) #randomize weeks
-    #print(swap)
+    print(swap)
     for i in range(nColors): 
         edgeSchedule[edgeSchedule == swap[i]] =101 + i  
     edgeSchedule = np.where(edgeSchedule !=0, edgeSchedule - 100, 0) #np.where creates a copy and does not change original
-    #print(edgeSchedule)
+    print(edgeSchedule)
     return edgeSchedule
 
 #check whether the generated schedule is round robin

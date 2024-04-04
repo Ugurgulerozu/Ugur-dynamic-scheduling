@@ -39,11 +39,9 @@ a function call when one does not want to change the original array.
 #randomly shuffle all weeks
 def rndAllRounds(edgeSchedule, nColors):
     swap = rnd.sample(range(1, nColors + 1), nColors) #randomize weeks
-    print(swap)
     for i in range(nColors): 
         edgeSchedule[edgeSchedule == swap[i]] =101 + i  
     edgeSchedule = np.where(edgeSchedule !=0, edgeSchedule - 100, 0) #np.where creates a copy and does not change original
-    print(edgeSchedule)
     return edgeSchedule
 
 #check whether the generated schedule is round robin
@@ -546,6 +544,22 @@ def calculate_obj_value(n, timetable, result_matrix):
         objective_values.append(obj_count)
     a = sum(objective_values)
     return a
+
+def invert_schedule(schedule):
+    num_teams = schedule.shape[0] - 1
+    num_days = num_teams - 1
+
+    inverted_schedule = np.zeros((num_teams + 1, num_teams + 1), dtype=int)
+
+    for i in range(1, num_teams + 1):
+        for j in range(1, num_teams + 1):
+            day = schedule[i, j]
+            if day != 0:
+                new_day = num_days - day + 1
+                inverted_schedule[i, j] = new_day
+
+    return inverted_schedule
+
 
 import numpy as np
 import random as rnd

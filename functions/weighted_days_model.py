@@ -2,10 +2,11 @@ from pyomo.environ import *
 import pandas as pd
 import math
 import numpy as np
+from pyomo.environ import NonNegativeIntegers
 import pyomo.core.expr
 #Tankut hocanın yazdığı modeli kodladım
 def weight_function(day, total_days):
-    return 1 / (total_days - day + 1)
+    return 1 / (total_days - day + 1)**10
 
 def weighted_days_model(teams,days,results_df, M=100):
 
@@ -113,10 +114,10 @@ def weighted_days_model(teams,days,results_df, M=100):
         print(model.day_weights[t])
     
     # Solve the model
-    solver = SolverFactory('gurobi',options={'TimeLimit': 7200})
+    solver = SolverFactory('gurobi',options={'TimeLimit': 18000})
     results = solver.solve(model, tee=True)
     #results= solver.solve(model, tee=True) , options={'data': {'day_weights': day_weights_data}}
-    #options={'MIPFocus':2, 'Heuristics':1,'PoolGap': 0.1, 'PoolSolutions': 10,'TimeLimit': 2400} 
+    #options={'MIPFocus':2, 'Heuristics':1,'PoolGap': 0.1, 'PoolSolutions': 10,'TimeLimit': 2400 , 'PoolSearchMode': 2, 'PoolSolutions': 10} 
     #mipfocus ile heuristics birlikte çalışınca model çok yavaşlıyor. ayrı ayrı olunca ne oluyo bilmiyorum
     obj_value = value(model.obj())
 

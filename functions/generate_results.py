@@ -12,7 +12,11 @@ def generate_results(teams):
             team1 = teams[i]
             team2 = teams[j]
 
-
+            #if i <= 8: # Teams 1 to 7 win against teams 8 and beyond
+            #    result = team1
+            
+            #else:
+            #    result = 'tie'
             #result = random.choices([team1, team2, 'tie'], weights=weights, k=1)[0]
             #result = random.choice([team1, team2, 'tie'])
             result =random.choice([team1])

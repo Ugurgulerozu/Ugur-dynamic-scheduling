@@ -5,14 +5,14 @@ import numpy as np
 import pyomo.core.expr
 #Tankut hocanın yazdığı modeli kodladım
 
-def yeni_model(teams,days,results_df, M=100):
+def yeni_model(teams,days,result_matrix, M=100):
 
 
     # Create ConcreteModels
     model = ConcreteModel()
     # Variables
     model.x = Var(teams, teams, days, within=Binary)
-    model.p = Param(teams, teams, within = Integers, mutable = True)
+    model.p = Param(teams, teams, initialize=lambda model, i, j: result_matrix[i-1, j-1])
     model.d1 = Var(teams, teams, days, within=NonNegativeIntegers)
     model.d2 = Var(teams, teams, days, within=NonNegativeIntegers)
     model.y = Var(teams, teams, days, within = NonNegativeReals)
@@ -23,9 +23,10 @@ def yeni_model(teams,days,results_df, M=100):
     model.constraints = ConstraintList()
 
 
-    for i in teams:
-        for j in teams:
-            model.p[i, j] = results_df.iloc[i-1, j-1]
+
+    #for i in teams:
+     #   for j in teams:
+      #      model.p[i, j] = results_df.iloc[i-1, j-1]
 
 
     for i in teams:
@@ -107,13 +108,14 @@ def yeni_model(teams,days,results_df, M=100):
     
     
     # Solve the model
-    solver = SolverFactory('gurobi',options={'TimeLimit': 2400, 'PoolSearchMode': 2, 'PoolSolutions': 10 }) 
-    results= solver.solve(model, tee=True)
+    solver = SolverFactory('gurobi') 
+    results= solver.solve(model)
+    #tee=True
     #options={'MIPFocus':2, 'Heuristics':1,'PoolGap': 0.1, 'PoolSolutions': 10,} 
     #mipfocus ile heuristics birlikte çalışınca model çok yavaşlıyor. ayrı ayrı olunca ne oluyo bilmiyorum
 
     obj_value = value(model.obj())
-    #model.write(f" 8takim.lp", io_options={'symbolic_solver_labels': True})
+   # model.write(f" 4takimianla.lp", io_options={'symbolic_solver_labels': True})
     #model.pprint()
     
 

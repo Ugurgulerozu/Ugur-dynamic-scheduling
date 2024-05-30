@@ -108,8 +108,8 @@ def yeni_model(teams,days,result_matrix, M=100):
     
     
     # Solve the model
-    solver = SolverFactory('gurobi') 
-    results= solver.solve(model)
+    solver = SolverFactory('gurobi', options={'TimeLimit': 10000}) 
+    results= solver.solve(model,tee=True)
     #tee=True
     #options={'MIPFocus':2, 'Heuristics':1,'PoolGap': 0.1, 'PoolSolutions': 10,} 
     #mipfocus ile heuristics birlikte çalışınca model çok yavaşlıyor. ayrı ayrı olunca ne oluyo bilmiyorum

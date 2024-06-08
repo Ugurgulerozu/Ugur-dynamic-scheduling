@@ -8,14 +8,14 @@ import pyomo.core.expr
 def weight_function(day, total_days):
     return 1 / (total_days - day + 1)
 
-def weighted_days_model(teams,days,results_df, M=100):
+def weighted_days_model(teams,days,result_matrix, M=100):
 
 
     # Create ConcreteModels
     model = ConcreteModel()
     # Variables
     model.x = Var(teams, teams, days, within=Binary)
-    model.p = Param(teams, teams, within = Integers, mutable = True)
+    model.p = Param(teams, teams, initialize=lambda model, i, j: result_matrix[i-1, j-1])
     model.d1 = Var(teams, teams, days, within=NonNegativeIntegers)
     model.d2 = Var(teams, teams, days, within=NonNegativeIntegers)
     model.y = Var(teams, teams, days, within = NonNegativeReals)
@@ -27,10 +27,6 @@ def weighted_days_model(teams,days,results_df, M=100):
     # Constraints
     model.constraints = ConstraintList()
 
-
-    for i in teams:
-        for j in teams:
-            model.p[i, j] = results_df.iloc[i-1, j-1]
 
 
     for i in teams:
@@ -114,8 +110,8 @@ def weighted_days_model(teams,days,results_df, M=100):
         print(model.day_weights[t])
     
     # Solve the model
-    solver = SolverFactory('gurobi',options={'TimeLimit': 3600})
-    results = solver.solve(model, tee=True)
+    solver = SolverFactory('gurobi', options={'TimeLimit': 2000})
+    results = solver.solve(model)
     #results= solver.solve(model, tee=True) , options={'data': {'day_weights': day_weights_data}}
     #options={'MIPFocus':2, 'Heuristics':1,'PoolGap': 0.1, 'PoolSolutions': 10,'TimeLimit': 2400 , 'PoolSearchMode': 2, 'PoolSolutions': 10} 
     #mipfocus ile heuristics birlikte çalışınca model çok yavaşlıyor. ayrı ayrı olunca ne oluyo bilmiyorum

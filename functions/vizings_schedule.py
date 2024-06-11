@@ -458,7 +458,7 @@ def point_rating(ratings, teams, solution_df, result_df, r):
 
     return ratings, ratings_df
 
-def calculate_obj_value2(n, timetable, result_df):
+def calculate_obj_value2(n, timetable, result_matrix):
     teams = list(range(1,n+1))
     days = list(range(1,n))
     non_zero_entries = timetable[1:, 1:]
@@ -476,37 +476,40 @@ def calculate_obj_value2(n, timetable, result_df):
     new_format_array[:, 1:] += 1
     new_format_array = new_format_array[new_format_array[:, 0].argsort()]
     new_format_array = new_format_array[new_format_array[:, 2] < new_format_array[:, 1]]
-    print(new_format_array)
-    solution_df = pd.DataFrame(new_format_array, columns=['Day', 'Team 1', 'Team 2'])
-
-    initial_ratings = {i: 0 for i in range(1, n+1)}
-    U_ij = np.zeros((n, n)) 
-    ratings_array = np.array(list(initial_ratings.values()))
-    for i in range(n):
-        for j in range(n):
-            U_ij[i, j] = abs((ratings_array[i] - ratings_array[j]))
-    ratings_df = pd.DataFrame(U_ij, columns=teams, index=teams)
+    timetable = new_format_array
+    ratings = {i: 0 for i in teams}
 
     objective_values = []
 
-
-    ratings = initial_ratings
-
+    count=0
+    lcount=0
+ 
     for d in days:
-
-        obj_count = 0
-        for _, row in solution_df.iterrows():
-            team1 = row['Team 1']
-            team2 = row['Team 2']
-            day = row['Day']
-            if d == day:
-                obj_count += ratings_df.iloc[team1-1, team2-1]
-
-        d= [d]
-        ratings, ratings_df = point_rating(ratings, teams, solution_df, result_df, d)
-        objective_values.append(obj_count)
+        obj_count =0
+        for row in timetable:
+            day,team1,team2 = row
+            if d==day:
+                obj_count +=(abs(ratings[team1] - ratings[team2]))
+                ratings[team1] += result_matrix[team1-1,team2-1]
+                ratings[team2] += result_matrix[team2-1,team1-1]
+        print(ratings)
+        if d == days[-2]:
+            first_team = max(ratings, key=ratings.get)
+            first_team_rating = ratings[first_team]
+            last_team = min(ratings, key=ratings.get)
+            last_team_rating = ratings[last_team]
+            for i in teams:
+                if i != first_team:
+                    if abs(ratings[i] - first_team_rating) <= 3:
+                        count += 1
+                        break
+            for i in teams:
+                if i != last_team:
+                    if abs(ratings[i] - last_team_rating) <= 3:
+                        lcount += 1
+                        break
         a = sum(objective_values)
-    return a
+    return a, count, lcount
 
 def calculate_obj_value(n, timetable, result_matrix):
     teams = list(range(1,n+1))

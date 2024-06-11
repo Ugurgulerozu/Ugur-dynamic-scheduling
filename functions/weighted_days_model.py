@@ -110,7 +110,7 @@ def weighted_days_model(teams,days,result_matrix, M=100):
         print(model.day_weights[t])
     
     # Solve the model
-    solver = SolverFactory('gurobi', options={'TimeLimit': 2000})
+    solver = SolverFactory('gurobi', options={'TimeLimit': 800})
     results = solver.solve(model)
     #results= solver.solve(model, tee=True) , options={'data': {'day_weights': day_weights_data}}
     #options={'MIPFocus':2, 'Heuristics':1,'PoolGap': 0.1, 'PoolSolutions': 10,'TimeLimit': 2400 , 'PoolSearchMode': 2, 'PoolSolutions': 10} 
